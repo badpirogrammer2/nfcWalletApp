@@ -1,64 +1,15 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * Generated with the TypeScript template
- * https://github.com/react-native-community/react-native-template-typescript
- *
- * @format
- */
-
-import React, {useEffect, useState, type PropsWithChildren} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   SafeAreaView,
-  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
-  useColorScheme,
   View,
   Modal,
   TouchableOpacity,
+  useColorScheme,
 } from 'react-native';
 import NfcManager, {NfcEvents, Ndef} from 'react-native-nfc-manager';
-
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-
-const Section: React.FC<
-  PropsWithChildren<{
-    title: string;
-  }>
-> = ({children, title}) => {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-};
 
 const App = () => {
   const isDarkMode = useColorScheme() === 'dark';
@@ -90,7 +41,8 @@ const App = () => {
   }, []);
 
   const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+    backgroundColor: isDarkMode ? '#222' : '#f5f5f5',
+    flex: 1,
   };
 
   return (
@@ -99,30 +51,11 @@ const App = () => {
         barStyle={isDarkMode ? 'light-content' : 'dark-content'}
         backgroundColor={backgroundStyle.backgroundColor}
       />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
+      <View style={styles.container}>
+        <TouchableOpacity style={styles.nfcButton} onPress={() => setModalVisible(false)}>
+          <Text style={styles.buttonText}>Ready to Scan NFC</Text>
+        </TouchableOpacity>
+      </View>
       <Modal
         visible={modalVisible}
         transparent
@@ -144,21 +77,20 @@ const App = () => {
 };
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
+  nfcButton: {
+    backgroundColor: '#007AFF',
+    padding: 16,
+    borderRadius: 8,
   },
-  sectionDescription: {
-    marginTop: 8,
+  buttonText: {
+    color: '#fff',
     fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
+    fontWeight: 'bold',
   },
   modalContainer: {
     flex: 1,
