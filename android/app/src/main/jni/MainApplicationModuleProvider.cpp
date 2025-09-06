@@ -28,5 +28,5 @@ std::shared_ptr<TurboModule> MainApplicationModuleProvider(
   return rncore_ModuleProvider(moduleName, params);
 }
 
-} // namespace react
-} // namespace facebook
+} 
+}
