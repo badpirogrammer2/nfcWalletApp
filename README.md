@@ -2,7 +2,7 @@
 
 A comprehensive React Native application that provides enterprise-grade NFC payment processing with integrated Apple Pay and Google Pay support. Features advanced blockchain-inspired security through AIONET Protocol v1.2, including clone-resistant technology, real-time fraud detection, and proximity-based anti-skimming protection.
 
-**🎉 LATEST UPDATE: Complete AIONET Integration with Multi-Item Receipt System**
+**🎉 LATEST UPDATE: Complete AIONET Integration with Event-Driven NFC & Battery Optimization**
 
 The app now includes:
 - ✅ **Full AIONET Protocol v1.2 Integration** with blockchain-based security
@@ -10,6 +10,7 @@ The app now includes:
 - ✅ **Multi-Item Receipt Generation** with detailed item categorization
 - ✅ **Receipt Image Generation** in multiple styles (modern, classic, minimal)
 - ✅ **Platform-Specific Image Saving** (iOS Photos / Android Gallery)
+- ✅ **Event-Driven NFC Management** with battery optimization
 - ✅ **Advanced Security Features** including clone resistance and fraud detection
 - ✅ **Comprehensive Demo System** showcasing all features
 
@@ -32,6 +33,14 @@ The app now includes:
 - ✅ **Multi-Tag Handling**: Support for concurrent tag detection and processing
 - ✅ **Tag Authentication**: Password protection and lock bit management
 - ✅ **Memory Management**: Efficient handling of tag memory constraints
+
+### **Battery Optimization & Event-Driven NFC**
+- ✅ **Event-Driven Architecture**: NFC only activates when transaction triggers are detected
+- ✅ **Low-Power Mode**: Automatic power management to minimize battery drain
+- ✅ **Platform-Specific Optimization**: iOS and Android optimized power management
+- ✅ **Background Processing**: Minimal background activity when idle
+- ✅ **Transaction-Only Activation**: NFC scanning only triggered by actual transactions
+- ✅ **Automatic Deactivation**: Returns to low-power mode after transaction completion
 
 ### **Payment Processing**
 - ✅ **Apple Pay Integration**: Native iOS PassKit integration with biometric authentication
