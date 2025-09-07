@@ -4,6 +4,7 @@ A React Native application that enables NFC tag scanning, transaction processing
 
 ## Features
 
+### Core NFC Functionality
 - **NFC Tag Scanning**: Detect and read NFC tags (NTAG213, NTAG215, etc.)
 - **Transaction Processing**: Handle transactions with item names and amounts
 - **Receipt Generation**: Automatically generate formatted receipts with unique IDs
@@ -12,23 +13,31 @@ A React Native application that enables NFC tag scanning, transaction processing
 - **Cross-Platform Support**: Android and iOS with HCE capabilities
 - **Error Handling**: Graceful handling of NFC read/write failures
 - **Dark Mode Support**: Automatic theme adaptation
+
+### Advanced Notification & Recovery System
 - **Smart Notifications**: Cross-platform failure notifications with persistent alerts
 - **Real-time Feedback**: Immediate alerts and toast notifications for all NFC operations
 - **Payment Error Logging**: Comprehensive logging of payment failures with retry mechanisms
 - **Payment Method Switching**: Dynamic switching between NFC, card, and digital payments
 - **Transaction Recovery**: Automatic retry and recovery options for failed payments
-- **AIONET Protocol v1.2 Integration**: Enhanced blockchain-inspired security for NFC transactions
+
+### AIONET Protocol v1.2 Security Suite
+- **Blockchain-Inspired Security**: Full blockchain implementation for NFC transactions
 - **Secure Transaction Signing**: Cryptographic signing and verification of all transactions
 - **Transaction Chain Management**: Maintain immutable transaction history with hash linking
 - **Device Pairing**: Secure device-to-device communication with ECDH key exchange
 - **Proof of Work**: Simple mining algorithm for transaction validation
 - **Encrypted Data Transmission**: AES encryption for secure data exchange between devices
+
+### Advanced Message Security
 - **Blockchain Message Security**: Full blockchain implementation for securing inter-device messages
 - **Message Authentication**: Cryptographic proof of message authenticity and integrity
 - **Distributed Message Ledger**: Immutable blockchain-based message history
 - **Consensus Mechanisms**: Validator-based consensus for message validation
 - **Merkle Tree Integration**: Efficient message verification using Merkle roots
 - **Cross-Device Message Verification**: End-to-end verification of messages between devices
+
+### Anti-Fraud & Anti-Cloning Protection
 - **Dynamic Data Generation**: Time-sensitive data to prevent replay attacks and cloning
 - **Liveness Detection**: Behavioral analysis to detect real user interaction vs automated attacks
 - **Trust Scoring System**: Multi-factor reputation scoring that's hard to spoof
@@ -36,6 +45,8 @@ A React Native application that enables NFC tag scanning, transaction processing
 - **Anti-Skimming Protections**: Proximity and signal strength monitoring
 - **Challenge-Response Authentication**: Dynamic challenges to verify device authenticity
 - **Behavioral Analysis**: Pattern recognition for fraud detection
+
+### Biometric & Behavioral Security
 - **Biometric Integration**: Support for fingerprint, facial, and gesture recognition
 - **Proximity Security**: Distance and angle validation for secure interactions
 - **Timing Analysis**: Response time validation to detect automated attacks
@@ -44,24 +55,45 @@ A React Native application that enables NFC tag scanning, transaction processing
 - **Gesture Sequence Analysis**: Advanced touch and swipe pattern recognition
 - **Pressure Pattern Validation**: Natural touch pressure variation detection
 - **Movement Pattern Tracking**: Device movement analysis for security validation
+
+### Advanced Security Monitoring
 - **Signal Strength Monitoring**: NFC signal analysis for skimming detection
 - **Interference Detection**: Environmental interference monitoring
 - **Usage Pattern Learning**: Adaptive security based on user behavior patterns
 - **Risk Level Classification**: Dynamic risk assessment (Low/Medium/High/Critical)
 - **Confidence Scoring**: Statistical confidence metrics for security decisions
 - **Multi-Factor Authentication**: Layered security validation approach
+
+### AI-Powered Security Intelligence
 - **Rotating AI Trust Score**: Dynamic trust scoring with adaptive learning and predictive analytics
 - **Time-Based Score Decay**: Trust scores decay over time without recent activity
 - **Historical Trend Analysis**: Pattern recognition and trend-based predictions
 - **Adaptive Weight Adjustment**: AI-driven component weight optimization
 - **Anomaly Detection**: Statistical analysis for detecting unusual behavior patterns
 - **Predictive Scoring**: Machine learning-based future trust score prediction
+
+### Entropy-Based Liveness Detection
 - **Entropy Fingerprinting**: Advanced Shannon entropy analysis for liveness detection
 - **Shannon Entropy Analysis**: Mathematical randomness measurement of user interactions
 - **Multi-Modal Entropy**: Timing, pressure, movement, gesture, and session entropy analysis
-- **Anomaly Detection**: Statistical outlier detection using z-scores and p-values
+- **Statistical Anomaly Detection**: Z-scores and p-values for outlier detection
 - **Entropy Pattern Recognition**: Unique entropy fingerprints for user identification
 - **Liveness Scoring**: Entropy-based confidence scoring for human vs automated detection
+
+### Clone-Resistant Security Features
+- **Hardware Fingerprinting**: Device-specific unique identifier generation
+- **Behavioral Pattern Analysis**: Comprehensive analysis of user interaction patterns
+- **Temporal Consistency Checks**: Time-based validation to prevent replay attacks
+- **Session Binding Verification**: Ensures security data is tied to specific sessions
+- **Entropy Pattern Validation**: Advanced randomness analysis for liveness detection
+- **Proximity Environment Monitoring**: Signal strength and environmental validation
+- **Trust Score Calculation**: Multi-factor scoring system for security assessment
+- **Anti-Cloning Measures Implementation**: Active protection against device cloning
+- **Comprehensive Clone Detection**: Multi-layer detection of cloning attempts
+- **False Positive Prevention**: Intelligent filtering to avoid false security alerts
+- **Gradual Threat Detection**: Progressive security response based on threat levels
+- **Edge Case Handling**: Robust handling of boundary conditions and unusual scenarios
+- **Race Condition Prevention**: Thread-safe operations for concurrent security checks
 
 ## Prerequisites
 

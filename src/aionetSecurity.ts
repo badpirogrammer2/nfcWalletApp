@@ -2025,11 +2025,12 @@ export class BlockchainMessageManager {
   // Generate current hardware fingerprint
   private generateHardwareFingerprint(): string {
     // In production, this would collect actual hardware data
+    // For React Native, use device-specific information
     const hardwareData = [
-      navigator.userAgent,
-      screen.width + 'x' + screen.height,
-      navigator.hardwareConcurrency?.toString() || 'unknown',
+      'ReactNative-' + this.deviceId,
       Date.now().toString(),
+      Math.random().toString(),
+      'NFC-Wallet-App',
     ].join('|');
 
     return CryptoJS.SHA256(hardwareData).toString();
