@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NfcManager, {NfcEvents, Ndef} from 'react-native-nfc-manager';
+import AIONETSecurityManager, { SecureTransaction, TransactionChain, BlockchainMessageManager, SecureMessage } from './src/aionetSecurity';
 
 interface NfcItem {
   id: string;
@@ -356,11 +357,32 @@ const App = () => {
   const [currentTag, setCurrentTag] = useState<any>(null);
   const [currentTransaction, setCurrentTransaction] = useState<PaymentTransaction | null>(null);
 
+  // AIONET Security State
+  const [aionetManager] = useState(() => AIONETSecurityManager.getInstance());
+  const [transactionChain] = useState(() => new TransactionChain());
+  const [blockchainMessageManager] = useState(() => {
+    const deviceInfo = AIONETSecurityManager.getInstance().getDeviceInfo();
+    return BlockchainMessageManager.getInstance(deviceInfo.deviceId);
+  });
+  const [deviceInfo, setDeviceInfo] = useState<{deviceId: string; publicKey: string} | null>(null);
+  const [isSecureMode, setIsSecureMode] = useState(false);
+  const [pairedDevices, setPairedDevices] = useState<string[]>([]);
+  const [blockchainStats, setBlockchainStats] = useState<any>(null);
+
   useEffect(() => {
     const initializeApp = async () => {
       try {
         await loadItems();
         await NfcManager.start();
+
+        // Initialize AIONET Security
+        const info = aionetManager.getDeviceInfo();
+        setDeviceInfo(info);
+        console.log('AIONET Security initialized:', info.deviceId);
+
+        // Load paired devices from storage
+        await loadPairedDevices();
+
       } catch (error) {
         console.error('App initialization error:', error);
         Alert.alert('Error', 'App initialization failed. Please restart the app.');
@@ -402,6 +424,27 @@ const App = () => {
     } catch (error) {
       console.error('Error saving items:', error);
       Alert.alert('Error', 'Failed to save transaction. Please check storage permissions.');
+    }
+  };
+
+  const loadPairedDevices = async () => {
+    try {
+      const stored = await AsyncStorage.getItem('aionet_paired_devices');
+      if (stored) {
+        const devices = JSON.parse(stored);
+        setPairedDevices(devices);
+      }
+    } catch (error) {
+      console.error('Error loading paired devices:', error);
+    }
+  };
+
+  const savePairedDevices = async (devices: string[]) => {
+    try {
+      await AsyncStorage.setItem('aionet_paired_devices', JSON.stringify(devices));
+      setPairedDevices(devices);
+    } catch (error) {
+      console.error('Error saving paired devices:', error);
     }
   };
 
@@ -463,6 +506,19 @@ const App = () => {
 
   const generateReceipt = (item: NfcItem): string => {
     const receiptId = `RCP-${Date.now()}`;
+
+    if (isSecureMode && deviceInfo) {
+      // Generate secure receipt using AIONET
+      const secureTransaction = transactionChain.getChain().find(
+        t => t.itemName === item.name && Math.abs(t.timestamp - item.timestamp) < 5000 // Find matching transaction within 5 seconds
+      );
+
+      if (secureTransaction) {
+        return aionetManager.generateSecureReceipt(secureTransaction);
+      }
+    }
+
+    // Standard receipt generation
     const receipt = `RECEIPT\n-------\nID: ${receiptId}\nItem: ${
       item.name
     }\nAmount: $${item.amount || 0}\nDate: ${new Date(
@@ -512,6 +568,26 @@ const App = () => {
     try {
       transaction.status = 'processing';
 
+      // If secure mode is enabled, create AIONET secure transaction
+      if (isSecureMode && deviceInfo) {
+        console.log('Creating secure AIONET transaction...');
+
+        // Create secure transaction with blockchain-style signing
+        const secureTransaction = await aionetManager.createSecureTransaction(
+          amount,
+          itemName,
+          deviceInfo.deviceId, // Use own device as recipient for now
+          transactionChain.getLatestHash() || undefined
+        );
+
+        // Add to transaction chain
+        transactionChain.addTransaction(secureTransaction);
+
+        console.log('Secure transaction created:', secureTransaction.id);
+        console.log('Transaction hash:', secureTransaction.hash);
+        console.log('Signature verified:', await aionetManager.verifyTransaction(secureTransaction, deviceInfo.publicKey));
+      }
+
       // Simulate different types of payment failures
       const failureType = Math.random();
 
@@ -534,7 +610,13 @@ const App = () => {
 
       if (success) {
         transaction.status = 'completed';
-        NotificationManager.showPaymentSuccessNotification(`Payment of $${amount} completed successfully via ${paymentMethod}`);
+
+        if (isSecureMode) {
+          NotificationManager.showPaymentSuccessNotification(`🔐 Secure payment of $${amount} completed successfully via ${paymentMethod} (AIONET v1.2)`);
+        } else {
+          NotificationManager.showPaymentSuccessNotification(`Payment of $${amount} completed successfully via ${paymentMethod}`);
+        }
+
         return true;
       } else {
         throw new Error('Payment processing failed');
@@ -623,6 +705,96 @@ const App = () => {
     ]);
   };
 
+  // Secure messaging functions
+  const sendSecureMessage = async (recipientDeviceId: string, message: string, messageType: 'transaction' | 'handshake' | 'verification' | 'data' = 'data') => {
+    try {
+      if (!deviceInfo) {
+        Alert.alert('Error', 'Device not initialized');
+        return null;
+      }
+
+      // Get shared secret for encryption (in real implementation, this would be established during pairing)
+      const pair = await aionetManager.establishSecurePair(recipientDeviceId, 'dummy_public_key');
+      const sharedSecret = pair.sharedSecret;
+
+      const secureMessage = await blockchainMessageManager.createSecureMessage(
+        recipientDeviceId,
+        message,
+        messageType,
+        sharedSecret
+      );
+
+      console.log('Secure message created:', secureMessage.id);
+      console.log('Message hash:', secureMessage.hash);
+
+      // Update blockchain stats
+      const stats = blockchainMessageManager.getBlockchainStats();
+      setBlockchainStats(stats);
+
+      return secureMessage;
+    } catch (error) {
+      console.error('Error sending secure message:', error);
+      Alert.alert('Error', 'Failed to send secure message');
+      return null;
+    }
+  };
+
+  const verifyReceivedMessage = async (message: SecureMessage, senderPublicKey: string) => {
+    try {
+      const isValid = await blockchainMessageManager.verifySecureMessage(message, senderPublicKey);
+
+      if (isValid) {
+        console.log('Message verification successful:', message.id);
+        NotificationManager.showToast('✅ Message verified successfully');
+      } else {
+        console.error('Message verification failed:', message.id);
+        NotificationManager.showToast('❌ Message verification failed');
+      }
+
+      return isValid;
+    } catch (error) {
+      console.error('Error verifying message:', error);
+      return false;
+    }
+  };
+
+  const createMessageBlock = async () => {
+    try {
+      const newBlock = await blockchainMessageManager.createMessageBlock();
+
+      if (newBlock) {
+        console.log('New message block created:', newBlock.index);
+        NotificationManager.showToast(`📦 New blockchain block created (#${newBlock.index})`);
+
+        // Update blockchain stats
+        const stats = blockchainMessageManager.getBlockchainStats();
+        setBlockchainStats(stats);
+      }
+
+      return newBlock;
+    } catch (error) {
+      console.error('Error creating message block:', error);
+      return null;
+    }
+  };
+
+  const verifyBlockchain = () => {
+    try {
+      const isValid = blockchainMessageManager.verifyMessageBlockchain();
+
+      if (isValid) {
+        NotificationManager.showToast('✅ Blockchain integrity verified');
+      } else {
+        NotificationManager.showToast('❌ Blockchain integrity compromised');
+      }
+
+      return isValid;
+    } catch (error) {
+      console.error('Error verifying blockchain:', error);
+      return false;
+    }
+  };
+
   const renderItem = ({item}: {item: NfcItem}) => (
     <TouchableOpacity
       style={[styles.itemCard, {backgroundColor: isDarkMode ? '#333' : '#fff'}]}
@@ -675,6 +847,61 @@ const App = () => {
         <Text style={[styles.title, {color: isDarkMode ? '#fff' : '#000'}]}>
           NFC Wallet
         </Text>
+
+        {/* AIONET Security Status */}
+        <View style={styles.securityStatus}>
+          <View style={styles.securityIndicator}>
+            <Text style={[styles.securityText, {color: isDarkMode ? '#fff' : '#000'}]}>
+              🔐 AIONET v1.2 Security: {isSecureMode ? 'ENABLED' : 'DISABLED'}
+            </Text>
+            {deviceInfo && (
+              <Text style={[styles.deviceIdText, {color: isDarkMode ? '#666' : '#888'}]}>
+                Device: {deviceInfo.deviceId.substring(0, 12)}...
+              </Text>
+            )}
+            {blockchainStats && (
+              <View style={styles.blockchainStatsContainer}>
+                <Text style={[styles.blockchainStatsText, {color: isDarkMode ? '#888' : '#666'}]}>
+                  📊 Blocks: {blockchainStats.totalBlocks} | Messages: {blockchainStats.totalMessages}
+                </Text>
+                <Text style={[styles.securityLevelText, {
+                  color: isSecureMode ? '#28a745' : '#dc3545',
+                  fontWeight: 'bold'
+                }]}>
+                  🛡️ Trust Level: {isSecureMode ? 'HIGH' : 'STANDARD'}
+                </Text>
+              </View>
+            )}
+          </View>
+          <TouchableOpacity
+            style={[styles.securityToggle, isSecureMode && styles.securityEnabled]}
+            onPress={() => setIsSecureMode(!isSecureMode)}>
+            <Text style={styles.securityToggleText}>
+              {isSecureMode ? 'Disable' : 'Enable'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Blockchain Action Buttons */}
+        {isSecureMode && (
+          <View style={styles.blockchainActions}>
+            <TouchableOpacity
+              style={styles.blockchainButton}
+              onPress={() => sendSecureMessage('DEVICE-TEST', 'Test secure message', 'data')}>
+              <Text style={styles.blockchainButtonText}>📤 Send Message</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.blockchainButton}
+              onPress={createMessageBlock}>
+              <Text style={styles.blockchainButtonText}>📦 Create Block</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.blockchainButton}
+              onPress={verifyBlockchain}>
+              <Text style={styles.blockchainButtonText}>🔍 Verify Chain</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {items.length === 0 ? (
           <View style={styles.emptyState}>
@@ -935,6 +1162,75 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  // AIONET Security Styles
+  securityStatus: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 15,
+    marginBottom: 15,
+    borderRadius: 8,
+    backgroundColor: '#f8f9fa',
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  securityIndicator: {
+    flex: 1,
+  },
+  securityText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 2,
+  },
+  deviceIdText: {
+    fontSize: 12,
+  },
+  securityToggle: {
+    backgroundColor: '#6c757d',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 5,
+  },
+  securityEnabled: {
+    backgroundColor: '#28a745',
+  },
+  securityToggleText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  // Blockchain Styles
+  blockchainStatsContainer: {
+    marginTop: 5,
+  },
+  blockchainStatsText: {
+    fontSize: 11,
+    fontStyle: 'italic',
+  },
+  securityLevelText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    marginTop: 2,
+  },
+  blockchainActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+  },
+  blockchainButton: {
+    backgroundColor: '#17a2b8',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 5,
+    flex: 1,
+    marginHorizontal: 2,
+    alignItems: 'center',
+  },
+  blockchainButtonText: {
+    color: 'white',
+    fontSize: 11,
+    fontWeight: 'bold',
   },
 });
 
