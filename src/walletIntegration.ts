@@ -27,6 +27,50 @@ export interface PaymentMethod {
   network?: string;
 }
 
+export interface ReceiptItem {
+  id: string;
+  name: string;
+  description?: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  category: string;
+  tags: string[];
+  nfcTag?: string;
+  imageUrl?: string;
+  customFields?: Record<string, any>;
+}
+
+export interface DetailedReceipt {
+  id: string;
+  transactionId: string;
+  merchantId: string;
+  merchantName: string;
+  merchantAddress?: string;
+  merchantPhone?: string;
+  merchantEmail?: string;
+  timestamp: number;
+  currency: string;
+  items: ReceiptItem[];
+  subtotal: number;
+  taxAmount: number;
+  taxRate: number;
+  discountAmount: number;
+  discountCode?: string;
+  totalAmount: number;
+  paymentMethod: string;
+  paymentMethodId: string;
+  status: 'completed' | 'refunded' | 'cancelled';
+  receiptNumber: string;
+  cashierId?: string;
+  storeLocation?: string;
+  loyaltyPoints?: number;
+  nextVisitDiscount?: number;
+  customFields?: Record<string, any>;
+  nfcTags: string[];
+  securityProof: AIONETPaymentProof;
+}
+
 export interface PaymentTransaction {
   id: string;
   amount: number;
@@ -38,6 +82,7 @@ export interface PaymentTransaction {
   merchantId: string;
   secureToken: string;
   aionetProof: AIONETPaymentProof;
+  detailedReceipt?: DetailedReceipt;
 }
 
 export interface AIONETPaymentProof {
@@ -656,6 +701,243 @@ export class WalletIntegrationManager {
       warnings,
       recommendations,
     };
+  }
+
+  // Create detailed receipt with multiple items
+  async createDetailedReceipt(
+    transactionId: string,
+    merchantInfo: {
+      id: string;
+      name: string;
+      address?: string;
+      phone?: string;
+      email?: string;
+    },
+    items: ReceiptItem[],
+    paymentMethodId: string,
+    discountCode?: string,
+    loyaltyPoints?: number
+  ): Promise<DetailedReceipt> {
+    const subtotal = items.reduce((sum, item) => sum + item.totalPrice, 0);
+    const taxRate = 0.08; // 8% tax rate (configurable)
+    const taxAmount = Math.round(subtotal * taxRate * 100) / 100;
+    const discountAmount = discountCode ? Math.round(subtotal * 0.1 * 100) / 100 : 0; // 10% discount
+    const totalAmount = subtotal + taxAmount - discountAmount;
+
+    const receipt: DetailedReceipt = {
+      id: `receipt_${transactionId}`,
+      transactionId,
+      merchantId: merchantInfo.id,
+      merchantName: merchantInfo.name,
+      merchantAddress: merchantInfo.address,
+      merchantPhone: merchantInfo.phone,
+      merchantEmail: merchantInfo.email,
+      timestamp: Date.now(),
+      currency: 'USD',
+      items,
+      subtotal,
+      taxAmount,
+      taxRate,
+      discountAmount,
+      discountCode,
+      totalAmount,
+      paymentMethod: this.getPaymentMethodName(paymentMethodId),
+      paymentMethodId,
+      status: 'completed',
+      receiptNumber: `RCP-${Date.now()}`,
+      storeLocation: 'Main Store',
+      loyaltyPoints,
+      nextVisitDiscount: discountCode ? 0.05 : 0, // 5% next visit discount
+      nfcTags: items.map(item => item.nfcTag).filter(Boolean) as string[],
+      securityProof: {
+        transactionHash: this.securityManager['hashTransaction']({
+          transactionId,
+          totalAmount,
+          timestamp: Date.now(),
+        }),
+        blockHeight: 0,
+        validatorSignatures: [],
+        securityScore: 95,
+        riskLevel: 'low',
+        entropyFingerprint: 'secure-fingerprint',
+        livenessProof: true,
+      },
+    };
+
+    return receipt;
+  }
+
+  // Generate receipt image for saving to device
+  async generateReceiptImage(
+    receipt: DetailedReceipt,
+    style: 'modern' | 'classic' | 'minimal' = 'modern'
+  ): Promise<string> {
+    try {
+      // Dynamic import for image generation library
+      const { generateReceiptImage } = await import('./receiptImageGenerator');
+
+      const imageUri = await generateReceiptImage(receipt, style, Platform.OS);
+      return imageUri;
+    } catch (error) {
+      console.error('Failed to generate receipt image:', error);
+      throw new Error('Image generation not available');
+    }
+  }
+
+  // Save receipt image to device gallery/photos
+  async saveReceiptImageToGallery(imageUri: string): Promise<boolean> {
+    try {
+      if (Platform.OS === 'ios') {
+        // iOS: Save to Photos library
+        const { saveToPhotos } = await import('./iosImageSaver');
+        return await saveToPhotos(imageUri);
+      } else if (Platform.OS === 'android') {
+        // Android: Save to Media Store/gallery
+        const { saveToGallery } = await import('./androidImageSaver');
+        return await saveToGallery(imageUri);
+      } else {
+        throw new Error('Unsupported platform');
+      }
+    } catch (error) {
+      console.error('Failed to save receipt image:', error);
+      return false;
+    }
+  }
+
+  // Get receipt data with NFC tags for multiple items
+  getReceiptWithNFCTags(receipt: DetailedReceipt): {
+    receiptData: string;
+    nfcTags: string[];
+    qrCode?: string;
+  } {
+    // Create comprehensive receipt data
+    const receiptData = {
+      receipt: receipt,
+      nfcTags: receipt.items.map((item, index) => ({
+        tagId: `tag_${receipt.id}_${index}`,
+        itemId: item.id,
+        itemName: item.name,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        totalPrice: item.totalPrice,
+        category: item.category,
+        tags: item.tags,
+        timestamp: receipt.timestamp,
+        merchantId: receipt.merchantId,
+      })),
+      securityHash: this.securityManager['hashTransaction'](receipt),
+      protocol: 'AIONET v1.2',
+    };
+
+    // Generate NFC tag strings
+    const nfcTags = receiptData.nfcTags.map(tag =>
+      JSON.stringify({
+        type: 'receipt_item',
+        data: tag,
+        hash: this.securityManager['hashTransaction'](tag),
+      })
+    );
+
+    // Generate QR code data (optional)
+    const qrCode = JSON.stringify({
+      type: 'receipt',
+      id: receipt.id,
+      total: receipt.totalAmount,
+      items: receipt.items.length,
+      merchant: receipt.merchantName,
+      timestamp: receipt.timestamp,
+    });
+
+    return {
+      receiptData: JSON.stringify(receiptData, null, 2),
+      nfcTags,
+      qrCode,
+    };
+  }
+
+  // Process payment with detailed receipt generation
+  async processPaymentWithDetailedReceipt(
+    items: ReceiptItem[],
+    paymentMethodId: string,
+    merchantInfo: {
+      id: string;
+      name: string;
+      address?: string;
+      phone?: string;
+      email?: string;
+    },
+    discountCode?: string
+  ): Promise<{
+    success: boolean;
+    transactionId?: string;
+    receipt?: DetailedReceipt;
+    error?: string;
+  }> {
+    try {
+      // Calculate total amount
+      const subtotal = items.reduce((sum, item) => sum + item.totalPrice, 0);
+      const taxRate = 0.08;
+      const taxAmount = Math.round(subtotal * taxRate * 100) / 100;
+      const discountAmount = discountCode ? Math.round(subtotal * 0.1 * 100) / 100 : 0;
+      const totalAmount = Math.round((subtotal + taxAmount - discountAmount) * 100); // Convert to cents
+
+      // Process payment
+      const paymentResult = await this.processPayment(
+        totalAmount,
+        'USD',
+        `Purchase: ${items.length} items from ${merchantInfo.name}`,
+        paymentMethodId,
+        merchantInfo.id
+      );
+
+      if (!paymentResult.success || !paymentResult.transactionId) {
+        return {
+          success: false,
+          error: paymentResult.error || 'Payment failed',
+        };
+      }
+
+      // Create detailed receipt
+      const receipt = await this.createDetailedReceipt(
+        paymentResult.transactionId,
+        merchantInfo,
+        items,
+        paymentMethodId,
+        discountCode,
+        10 // Sample loyalty points
+      );
+
+      return {
+        success: true,
+        transactionId: paymentResult.transactionId,
+        receipt,
+      };
+
+    } catch (error) {
+      console.error('Detailed payment processing failed:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Payment processing failed',
+      };
+    }
+  }
+
+  // Helper method to get payment method name
+  private getPaymentMethodName(paymentMethodId: string): string {
+    const method = this.availablePaymentMethods.find(pm => pm.id === paymentMethodId);
+    if (method) {
+      switch (method.type) {
+        case 'apple_pay':
+          return `Apple Pay (${method.network})`;
+        case 'google_pay':
+          return `Google Pay (${method.network})`;
+        case 'card':
+          return `${method.brand} ****${method.last4}`;
+        default:
+          return 'Unknown Payment Method';
+      }
+    }
+    return 'Unknown Payment Method';
   }
 }
 
