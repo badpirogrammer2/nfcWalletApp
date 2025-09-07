@@ -191,14 +191,53 @@ The app now includes:
 
 #### **NFC Operations**
 ```typescript
-// Scan NFC tag
-const tagData = await NFCManager.scanTag();
+// Event-Driven NFC Manager (Battery Optimized)
+import { EventDrivenNFCManger, NFCBatteryOptimizer } from './src/eventDrivenNFCManger';
 
-// Write receipt to tag
-const success = await NFCManager.writeReceipt(tagId, receiptData);
+// Initialize event-driven NFC manager
+const nfcManager = EventDrivenNFCManger.getInstance();
+await nfcManager.initialize();
 
-// Get tag information
-const tagInfo = await NFCManager.getTagInfo(tagId);
+// Activate NFC for transaction (30 second timeout)
+await nfcManager.activateForTransaction(30000);
+
+// Manual trigger for testing
+await nfcManager.triggerNFCScan();
+
+// Get battery optimization status
+const batteryStatus = await nfcManager.getBatteryOptimizationStatus();
+
+// Get optimization recommendations
+const recommendations = await NFCBatteryOptimizer.getOptimizationRecommendations();
+
+// Get current power state
+const powerState = nfcManager.getPowerState();
+
+// Check NFC readiness
+const isReady = await nfcManager.isNFCReady();
+
+// Clean up resources
+await nfcManager.cleanup();
+```
+
+#### **Receipt Image Generation**
+```typescript
+// Generate receipt image in different styles
+import { generateReceiptImage } from './src/receiptImageGenerator';
+
+const imageUri = await generateReceiptImage(receipt, 'modern', Platform.OS);
+// Styles: 'modern', 'classic', 'minimal'
+```
+
+#### **Platform-Specific Image Saving**
+```typescript
+// iOS: Save to Photos library
+import { saveToPhotos } from './src/iosImageSaver';
+const success = await saveToPhotos(imageUri);
+
+// Android: Save to Gallery
+import { saveToGallery } from './src/androidImageSaver';
+const success = await saveToGallery(imageUri);
 ```
 
 #### **Payment Processing**
@@ -227,6 +266,80 @@ const securityResult = await walletManager.validatePaymentSecurity(
 
 // Get security status
 const status = await walletManager.getPaymentSecurityStatus();
+```
+
+#### **AIONET Security Module**
+```typescript
+import { AIONETSecurityManager, BlockchainMessageManager } from './src/aionetSecurity';
+
+// Initialize security manager
+const securityManager = AIONETSecurityManager.getInstance();
+
+// Create blockchain message manager
+const blockchainManager = BlockchainMessageManager.getInstance('wallet-device');
+
+// Perform clone detection
+const cloneResult = await blockchainManager.detectCloningAttempt(
+  'device-id',
+  interactionData
+);
+
+// Calculate trust score
+const trustScore = await blockchainManager.calculateTrustScore(
+  'device-id',
+  interactionData
+);
+
+// Hash transaction data
+const hash = securityManager.hashTransaction({
+  amount: 5000,
+  merchantId: 'merchant_123',
+  timestamp: Date.now()
+});
+```
+
+#### **Multi-Item Receipt Processing**
+```typescript
+// Create detailed receipt with multiple items
+const receipt = await walletManager.createDetailedReceipt(
+  'txn_123456',
+  {
+    id: 'merchant_001',
+    name: 'Coffee Shop',
+    address: '123 Main St',
+    phone: '(555) 123-4567'
+  },
+  [
+    {
+      id: 'item_1',
+      name: 'Premium Coffee',
+      quantity: 2,
+      unitPrice: 5.99,
+      totalPrice: 11.98,
+      category: 'Beverages',
+      tags: ['hot', 'premium']
+    },
+    {
+      id: 'item_2',
+      name: 'Croissant',
+      quantity: 1,
+      unitPrice: 3.99,
+      totalPrice: 3.99,
+      category: 'Bakery',
+      tags: ['fresh', 'pastry']
+    }
+  ],
+  'apple_pay_1',
+  'DISCOUNT10' // Optional discount code
+);
+
+// Process payment with detailed receipt
+const result = await walletManager.processPaymentWithDetailedReceipt(
+  receiptItems,
+  'apple_pay_1',
+  merchantInfo,
+  'LOYALTY15' // Loyalty discount
+);
 ```
 
 ### **Response Formats**
@@ -587,6 +700,38 @@ The NFC Wallet App includes extensive test coverage across multiple dimensions:
 2. **Emulator Testing**:
    - Android: Use AVD with NFC support
    - iOS: Use Simulator (limited NFC support)
+
+### Demo Scripts
+The app includes comprehensive demo scripts to showcase all features:
+
+#### Event-Driven NFC Demo
+```bash
+npm run demo:event-driven
+# or
+node run-event-driven-demo.js
+```
+- Demonstrates battery-optimized NFC management
+- Shows event-driven transaction processing
+- Displays platform-specific optimizations
+- Monitors power state and battery usage
+
+#### Multi-Item Receipt Demo
+```bash
+npm run demo:multi-item
+# or
+node run-wallet-demo.js
+```
+- Showcases multi-item receipt generation
+- Demonstrates receipt image creation
+- Tests platform-specific image saving
+- Validates AIONET security integration
+
+#### Running All Tests
+```bash
+npm test
+npm run lint
+npm test -- --coverage
+```
 
 ## Capabilities & Test Cases
 
