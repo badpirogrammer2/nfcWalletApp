@@ -50,6 +50,18 @@ A React Native application that enables NFC tag scanning, transaction processing
 - **Risk Level Classification**: Dynamic risk assessment (Low/Medium/High/Critical)
 - **Confidence Scoring**: Statistical confidence metrics for security decisions
 - **Multi-Factor Authentication**: Layered security validation approach
+- **Rotating AI Trust Score**: Dynamic trust scoring with adaptive learning and predictive analytics
+- **Time-Based Score Decay**: Trust scores decay over time without recent activity
+- **Historical Trend Analysis**: Pattern recognition and trend-based predictions
+- **Adaptive Weight Adjustment**: AI-driven component weight optimization
+- **Anomaly Detection**: Statistical analysis for detecting unusual behavior patterns
+- **Predictive Scoring**: Machine learning-based future trust score prediction
+- **Entropy Fingerprinting**: Advanced Shannon entropy analysis for liveness detection
+- **Shannon Entropy Analysis**: Mathematical randomness measurement of user interactions
+- **Multi-Modal Entropy**: Timing, pressure, movement, gesture, and session entropy analysis
+- **Anomaly Detection**: Statistical outlier detection using z-scores and p-values
+- **Entropy Pattern Recognition**: Unique entropy fingerprints for user identification
+- **Liveness Scoring**: Entropy-based confidence scoring for human vs automated detection
 
 ## Prerequisites
 
@@ -180,6 +192,45 @@ Generate coverage report:
 ```bash
 npm test -- --coverage
 ```
+
+### Comprehensive Test Suites
+
+The NFC Wallet App includes extensive test coverage across multiple dimensions:
+
+#### 1. NFC Test Suite (`src/__tests__/NFCTestSuite.test.ts`)
+- **Mobile Device Failure Scenarios**: Battery, memory, network, GPS, orientation, background processing, temperature, storage
+- **NFC-Specific Failure Scenarios**: Tag permissions, format incompatibility, memory capacity, lock states, signal interference, movement, multiple tags, corruption
+- **Transaction Failure Scenarios**: Payment timeouts, insufficient funds, card declines, duplicates, currency errors, amount limits, merchant validation
+- **Security Failure Scenarios**: Certificate errors, encryption failures, signature verification, consensus failures, replay attacks, MITM, session hijacking
+- **Cross-Platform Edge Cases**: Android vs iOS differences, screen sizes, OS versions, hardware variations
+- **Performance & Stress Testing**: High transaction volume, concurrent operations, memory leaks, network throttling
+- **Recovery & Fallback Mechanisms**: Automatic retry, graceful degradation, offline mode, partial failure recovery
+- **Boundary & Edge Cases**: Extreme amounts, special characters, time zones, concurrent sessions, rapid operations, system time changes
+- **Integration & System-Level Tests**: Full transaction lifecycle, cross-component integration, error propagation, resource cleanup
+
+#### 2. Security Failure Tests (`src/__tests__/SecurityFailureTests.test.ts`)
+- **Cryptographic Attack Vectors**: RSA factorization, ECDSA malleability, hash collisions, padding oracle attacks
+- **Timing Attack Prevention**: Constant-time operations, cache timing mitigation, branch prediction prevention
+- **Side Channel Attack Prevention**: Power analysis, electromagnetic emanation, acoustic cryptanalysis
+- **Protocol-Level Attack Prevention**: Bleichenbacher, Lucky Thirteen, Heartbleed, BEAST attacks
+- **Blockchain-Specific Attack Vectors**: 51% attacks, double spending, eclipse attacks, Sybil attacks
+- **Application-Level Security Vulnerabilities**: SQL injection, XSS, CSRF, directory traversal
+- **Network-Level Attack Prevention**: DDoS, DNS rebinding, ARP poisoning, DNS spoofing
+- **Physical Security Attack Prevention**: NFC relay, skimming, device cloning, side channel attacks
+- **Advanced Persistent Threat (APT) Detection**: Slow Loris, zero-day protection, supply chain attacks, insider threats
+- **Compliance and Regulatory Testing**: PCI DSS, GDPR, SOX, HIPAA compliance validation
+- **Performance Under Attack**: Attack resistance, resource exhaustion, memory exhaustion prevention
+
+#### 3. Edge Cases & Boundary Tests (`src/__tests__/EdgeCasesBoundaryTests.test.ts`)
+- **Data Type Boundary Testing**: Integer overflow, floating point precision, Unicode handling, binary data
+- **Concurrency & Race Condition Testing**: Simultaneous operations, block creation races, shared resource conflicts
+- **Memory & Resource Boundary Testing**: Large payloads, memory leaks, resource exhaustion
+- **Time & Timing Boundary Testing**: System time manipulation, timezone/DST handling, leap year/date boundaries
+- **Network & Connectivity Edge Cases**: Intermittent connectivity, timeouts, proxy/VPN, IPv4/IPv6
+- **Device Hardware & OS Edge Cases**: Low-end performance, battery impact, storage critical, multiple instances
+- **Input Validation & Sanitization**: Malicious patterns, SQL injection, command injection, buffer overflow
+- **Error Handling & Recovery**: Graceful recovery, partial operations, state consistency
+- **Performance Boundary Testing**: High frequency operations, memory usage, concurrent load
 
 ### Manual Testing Setup
 1. **Physical Device Testing**:
