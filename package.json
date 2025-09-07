@@ -12,10 +12,12 @@
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/cli-platform-android": "^20.0.1",
+    "@stripe/stripe-react-native": "^0.37.2",
     "crypto-js": "^4.2.0",
     "react": "^19.1.0",
     "react-native": "^0.80.1",
-    "react-native-nfc-manager": "^3.16.2"
+    "react-native-nfc-manager": "^3.16.2",
+    "react-native-passkit": "^1.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",
