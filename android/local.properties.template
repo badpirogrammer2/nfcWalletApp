@@ -1,0 +1,23 @@
+# Android SDK Configuration Template
+# Copy this file to local.properties and update the paths for your local environment
+
+# Android SDK location
+# Replace with your Android SDK path (usually ~/Library/Android/sdk on macOS)
+sdk.dir=/path/to/your/Android/sdk
+
+# Android NDK location (optional - usually included in SDK)
+# ndk.dir=/path/to/your/Android/ndk
+
+# Example configurations for different operating systems:
+#
+# macOS:
+# sdk.dir=/Users/YOUR_USERNAME/Library/Android/sdk
+#
+# Windows:
+# sdk.dir=C:\\Users\\YOUR_USERNAME\\AppData\\Local\\Android\\Sdk
+#
+# Linux:
+# sdk.dir=/home/YOUR_USERNAME/Android/Sdk
+
+# Note: Replace YOUR_USERNAME with your actual system username
+# The local.properties file is ignored by git to keep your personal paths private

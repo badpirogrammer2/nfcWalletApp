@@ -32,6 +32,9 @@ local.properties
 *.hprof
 .cxx/
 
+# Android local properties template
+!android/local.properties.template
+
 # node.js
 #
 node_modules/
@@ -62,3 +65,70 @@ buck-out/
 # Ruby / CocoaPods
 /ios/Pods/
 /vendor/bundle/
+
+# Build artifacts with local paths
+android/app/build/
+/android/build/
+/ios/build/
+/ios/Pods/
+/vendor/bundle/
+
+# Gradle caches and build files
+.gradle/
+/build/
+*.iml
+*.ipr
+*.iws
+.idea/
+.cxx/
+
+# Android specific build artifacts
+android/app/build/intermediates/
+/android/app/build/outputs/
+/android/app/build/tmp/
+/android/app/build/generated/
+
+# iOS specific build artifacts
+ios/build/
+/ios/DerivedData/
+/ios/*.xcuserstate
+ios/*.xcbkptlist
+
+# Node modules and build artifacts
+node_modules/
+/build/
+*.jsbundle
+
+# Local environment files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE and editor files
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# React Native specific
+.expo/
+.expo-shared/
