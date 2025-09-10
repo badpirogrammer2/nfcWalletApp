@@ -31,6 +31,25 @@ export interface NFCPowerState {
   cpuUsage: number;
 }
 
+export interface DeviceCompatibility {
+  deviceType: 'mobile' | 'terminal';
+  manufacturer: string;
+  model: string;
+  nfcSupport: boolean;
+  chipCompatibility: string[];
+  protocolSupport: string[];
+  tested: boolean;
+  notes?: string;
+}
+
+export interface NTAGChipInfo {
+  type: 'NTAG213' | 'NTAG215' | 'NTAG216';
+  memoryBytes: number;
+  userMemoryBytes: number;
+  maxNdefSize: number;
+  supported: boolean;
+}
+
 export class EventDrivenNFCManger {
   private static instance: EventDrivenNFCManger;
   private eventEmitter: NativeEventEmitter | null = null;
@@ -549,6 +568,289 @@ export class EventDrivenNFCManger {
     } catch (error) {
       console.error('Failed to trigger NFC scan:', error);
       throw error;
+    }
+  }
+
+  // Get NTAG chip information and compatibility
+  getNTAGChipInfo(): NTAGChipInfo[] {
+    return [
+      {
+        type: 'NTAG213',
+        memoryBytes: 180,
+        userMemoryBytes: 144,
+        maxNdefSize: 132,
+        supported: true,
+      },
+      {
+        type: 'NTAG215',
+        memoryBytes: 540,
+        userMemoryBytes: 504,
+        maxNdefSize: 492,
+        supported: true,
+      },
+      {
+        type: 'NTAG216',
+        memoryBytes: 924,
+        userMemoryBytes: 888,
+        maxNdefSize: 876,
+        supported: true,
+      },
+    ];
+  }
+
+  // Get device compatibility matrix
+  getDeviceCompatibilityMatrix(): DeviceCompatibility[] {
+    return [
+      // Payment Terminals
+      {
+        deviceType: 'terminal',
+        manufacturer: 'Square',
+        model: '2nd Generation Terminal',
+        nfcSupport: true,
+        chipCompatibility: ['NTAG213', 'NTAG215', 'NTAG216'],
+        protocolSupport: ['NFC Forum Type 2', 'ISO/IEC 14443-2/3'],
+        tested: true,
+        notes: 'Full bidirectional NFC support with NXP chipset integration',
+      },
+      {
+        deviceType: 'terminal',
+        manufacturer: 'Ingenico',
+        model: 'Various Models',
+        nfcSupport: true,
+        chipCompatibility: ['NTAG213', 'NTAG215', 'NTAG216'],
+        protocolSupport: ['NFC Forum Type 2', 'ISO/IEC 14443-2/3'],
+        tested: true,
+        notes: 'Compatible with bidirectional NFC communication',
+      },
+      {
+        deviceType: 'terminal',
+        manufacturer: 'Verifone',
+        model: 'Various Models',
+        nfcSupport: true,
+        chipCompatibility: ['NTAG213', 'NTAG215', 'NTAG216'],
+        protocolSupport: ['NFC Forum Type 2', 'ISO/IEC 14443-2/3'],
+        tested: true,
+        notes: 'Broad chipset support including NXP and other manufacturers',
+      },
+      {
+        deviceType: 'terminal',
+        manufacturer: 'PAX',
+        model: 'Various Models',
+        nfcSupport: true,
+        chipCompatibility: ['NTAG213', 'NTAG215', 'NTAG216'],
+        protocolSupport: ['NFC Forum Type 2', 'ISO/IEC 14443-2/3'],
+        tested: true,
+        notes: 'Universal NFC support with efficient data handling',
+      },
+      // Mobile Devices - iOS
+      {
+        deviceType: 'mobile',
+        manufacturer: 'Apple',
+        model: 'iPhone 8 and later',
+        nfcSupport: true,
+        chipCompatibility: ['NTAG213', 'NTAG215', 'NTAG216'],
+        protocolSupport: ['NFC Forum Type 2', 'ISO/IEC 14443-2/3'],
+        tested: true,
+        notes: 'Core NFC framework support with background tag reading',
+      },
+      {
+        deviceType: 'mobile',
+        manufacturer: 'Apple',
+        model: 'iPad Pro (3rd gen and later)',
+        nfcSupport: true,
+        chipCompatibility: ['NTAG213', 'NTAG215', 'NTAG216'],
+        protocolSupport: ['NFC Forum Type 2', 'ISO/IEC 14443-2/3'],
+        tested: true,
+        notes: 'NFC support for iPad Pro models with U1 chip',
+      },
+      // Mobile Devices - Android
+      {
+        deviceType: 'mobile',
+        manufacturer: 'Samsung',
+        model: 'Galaxy S8 and later',
+        nfcSupport: true,
+        chipCompatibility: ['NTAG213', 'NTAG215', 'NTAG216'],
+        protocolSupport: ['NFC Forum Type 2', 'ISO/IEC 14443-2/3'],
+        tested: true,
+        notes: 'Samsung Pay integration with NFC controller',
+      },
+      {
+        deviceType: 'mobile',
+        manufacturer: 'Google',
+        model: 'Pixel 2 and later',
+        nfcSupport: true,
+        chipCompatibility: ['NTAG213', 'NTAG215', 'NTAG216'],
+        protocolSupport: ['NFC Forum Type 2', 'ISO/IEC 14443-2/3'],
+        tested: true,
+        notes: 'Google Pay integration with NFC chipset',
+      },
+      {
+        deviceType: 'mobile',
+        manufacturer: 'Various',
+        model: 'Android devices with NFC',
+        nfcSupport: true,
+        chipCompatibility: ['NTAG213', 'NTAG215', 'NTAG216'],
+        protocolSupport: ['NFC Forum Type 2', 'ISO/IEC 14443-2/3'],
+        tested: false,
+        notes: 'General Android NFC support - compatibility may vary by chipset',
+      },
+    ];
+  }
+
+  // Check if current device is compatible
+  async checkDeviceCompatibility(): Promise<{
+    isCompatible: boolean;
+    deviceInfo?: DeviceCompatibility;
+    supportedChips: NTAGChipInfo[];
+    warnings: string[];
+  }> {
+    try {
+      const compatibilityMatrix = this.getDeviceCompatibilityMatrix();
+      const supportedChips = this.getNTAGChipInfo();
+      const warnings: string[] = [];
+
+      // Check NFC availability
+      const nfcReady = await this.isNFCReady();
+      if (!nfcReady) {
+        warnings.push('NFC is not available or enabled on this device');
+        return {
+          isCompatible: false,
+          supportedChips,
+          warnings,
+        };
+      }
+
+      // Find matching device in compatibility matrix
+      let deviceInfo: DeviceCompatibility | undefined;
+
+      if (Platform.OS === 'ios') {
+        // iOS device detection
+        deviceInfo = compatibilityMatrix.find(
+          device => device.deviceType === 'mobile' &&
+                   device.manufacturer === 'Apple' &&
+                   device.nfcSupport
+        );
+      } else if (Platform.OS === 'android') {
+        // Android device detection - simplified for demo
+        deviceInfo = compatibilityMatrix.find(
+          device => device.deviceType === 'mobile' &&
+                   (device.manufacturer === 'Samsung' ||
+                    device.manufacturer === 'Google' ||
+                    device.model === 'Android devices with NFC') &&
+                   device.nfcSupport
+        );
+      }
+
+      if (!deviceInfo) {
+        warnings.push('Device not found in compatibility matrix');
+        return {
+          isCompatible: false,
+          supportedChips,
+          warnings,
+        };
+      }
+
+      // Check for any known compatibility issues
+      if (!deviceInfo.tested) {
+        warnings.push('Device compatibility not fully tested - some features may be limited');
+      }
+
+      return {
+        isCompatible: true,
+        deviceInfo,
+        supportedChips,
+        warnings,
+      };
+
+    } catch (error) {
+      console.error('Failed to check device compatibility:', error);
+      return {
+        isCompatible: false,
+        supportedChips: this.getNTAGChipInfo(),
+        warnings: ['Failed to determine device compatibility'],
+      };
+    }
+  }
+
+  // Get optimal memory usage for NTAG chip
+  getOptimalMemoryUsage(chipType: 'NTAG213' | 'NTAG215' | 'NTAG216'): {
+    maxDataSize: number;
+    recommendedChunkSize: number;
+    supportsCompression: boolean;
+  } {
+    const chipInfo = this.getNTAGChipInfo().find(chip => chip.type === chipType);
+
+    if (!chipInfo) {
+      throw new Error(`Unsupported chip type: ${chipType}`);
+    }
+
+    return {
+      maxDataSize: chipInfo.maxNdefSize,
+      recommendedChunkSize: Math.min(128, chipInfo.maxNdefSize),
+      supportsCompression: chipInfo.maxNdefSize > 256, // Enable compression for larger chips
+    };
+  }
+
+  // Validate NFC tag compatibility
+  async validateNFCTag(tagData: any): Promise<{
+    isValid: boolean;
+    chipType?: 'NTAG213' | 'NTAG215' | 'NTAG216';
+    memoryInfo?: NTAGChipInfo;
+    warnings: string[];
+  }> {
+    try {
+      const warnings: string[] = [];
+      const supportedChips = this.getNTAGChipInfo();
+
+      // Check if tag type is supported
+      const tagType = tagData.type || tagData.techType;
+
+      if (!tagType) {
+        warnings.push('Unable to determine NFC tag type');
+        return { isValid: false, warnings };
+      }
+
+      // Map tag type to NTAG chip
+      let chipType: 'NTAG213' | 'NTAG215' | 'NTAG216' | undefined;
+
+      if (tagType.includes('213') || tagData.memorySize === 180) {
+        chipType = 'NTAG213';
+      } else if (tagType.includes('215') || tagData.memorySize === 540) {
+        chipType = 'NTAG215';
+      } else if (tagType.includes('216') || tagData.memorySize === 924) {
+        chipType = 'NTAG216';
+      }
+
+      if (!chipType) {
+        warnings.push(`Unsupported NFC tag type: ${tagType}`);
+        return { isValid: false, warnings };
+      }
+
+      const chipInfo = supportedChips.find(chip => chip.type === chipType);
+
+      if (!chipInfo || !chipInfo.supported) {
+        warnings.push(`Chip type ${chipType} is not supported`);
+        return { isValid: false, warnings };
+      }
+
+      // Check memory usage
+      if (tagData.usedMemory > chipInfo.userMemoryBytes) {
+        warnings.push('Tag memory usage exceeds recommended limits');
+      }
+
+      return {
+        isValid: true,
+        chipType,
+        memoryInfo: chipInfo,
+        warnings,
+      };
+
+    } catch (error) {
+      console.error('Failed to validate NFC tag:', error);
+      return {
+        isValid: false,
+        warnings: ['Failed to validate NFC tag'],
+      };
     }
   }
 }

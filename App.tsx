@@ -368,6 +368,8 @@ const App = () => {
   const [isSecureMode, setIsSecureMode] = useState(false);
   const [pairedDevices, setPairedDevices] = useState<string[]>([]);
   const [blockchainStats, setBlockchainStats] = useState<any>(null);
+  const [deviceCompatibility, setDeviceCompatibility] = useState<any>(null);
+  const [compatibilityChecked, setCompatibilityChecked] = useState(false);
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -795,6 +797,28 @@ const App = () => {
     }
   };
 
+  // Device compatibility check
+  const checkDeviceCompatibility = async () => {
+    try {
+      // Import the NFC manager dynamically to avoid circular dependencies
+      const { EventDrivenNFCManger } = await import('./src/eventDrivenNFCManger');
+      const nfcManager = EventDrivenNFCManger.getInstance();
+
+      const compatibility = await nfcManager.checkDeviceCompatibility();
+      setDeviceCompatibility(compatibility);
+      setCompatibilityChecked(true);
+
+      if (compatibility.isCompatible) {
+        NotificationManager.showToast('✅ Device is compatible with all supported NFC devices');
+      } else {
+        NotificationManager.showToast('⚠️ Device compatibility issues detected');
+      }
+    } catch (error) {
+      console.error('Error checking device compatibility:', error);
+      NotificationManager.showToast('❌ Failed to check device compatibility');
+    }
+  };
+
   const renderItem = ({item}: {item: NfcItem}) => (
     <TouchableOpacity
       style={[styles.itemCard, {backgroundColor: isDarkMode ? '#333' : '#fff'}]}
@@ -880,6 +904,58 @@ const App = () => {
               {isSecureMode ? 'Disable' : 'Enable'}
             </Text>
           </TouchableOpacity>
+        </View>
+
+        {/* Device Compatibility Check */}
+        <View style={styles.compatibilitySection}>
+          <View style={styles.compatibilityHeader}>
+            <Text style={[styles.compatibilityTitle, {color: isDarkMode ? '#fff' : '#000'}]}>
+              📱 Device Compatibility
+            </Text>
+            <TouchableOpacity
+              style={styles.compatibilityButton}
+              onPress={checkDeviceCompatibility}>
+              <Text style={styles.compatibilityButtonText}>
+                {compatibilityChecked ? '🔄 Re-check' : 'Check'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {compatibilityChecked && deviceCompatibility && (
+            <View style={styles.compatibilityResults}>
+              <Text style={[
+                styles.compatibilityStatus,
+                {
+                  color: deviceCompatibility.isCompatible ? '#28a745' : '#dc3545',
+                  fontWeight: 'bold'
+                }
+              ]}>
+                {deviceCompatibility.isCompatible ? '✅ Compatible' : '❌ Issues Found'}
+              </Text>
+
+              {deviceCompatibility.deviceInfo && (
+                <Text style={[styles.compatibilityDevice, {color: isDarkMode ? '#ccc' : '#666'}]}>
+                  {deviceCompatibility.deviceInfo.manufacturer} {deviceCompatibility.deviceInfo.model}
+                </Text>
+              )}
+
+              {deviceCompatibility.warnings && deviceCompatibility.warnings.length > 0 && (
+                <View style={styles.compatibilityWarnings}>
+                  {deviceCompatibility.warnings.map((warning: string, index: number) => (
+                    <Text key={index} style={[styles.compatibilityWarning, {color: '#856404'}]}>
+                      ⚠️ {warning}
+                    </Text>
+                  ))}
+                </View>
+              )}
+
+              {deviceCompatibility.supportedChips && deviceCompatibility.supportedChips.length > 0 && (
+                <Text style={[styles.compatibilityChips, {color: isDarkMode ? '#aaa' : '#888'}]}>
+                  Supported Chips: {deviceCompatibility.supportedChips.map(chip => chip.type).join(', ')}
+                </Text>
+              )}
+            </View>
+          )}
         </View>
 
         {/* Blockchain Action Buttons */}
@@ -1231,6 +1307,59 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 11,
     fontWeight: 'bold',
+  },
+  // Compatibility Styles
+  compatibilitySection: {
+    padding: 15,
+    marginBottom: 15,
+    borderRadius: 8,
+    backgroundColor: '#f8f9fa',
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  compatibilityHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  compatibilityTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  compatibilityButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 5,
+  },
+  compatibilityButtonText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  compatibilityResults: {
+    marginTop: 10,
+  },
+  compatibilityStatus: {
+    fontSize: 14,
+    marginBottom: 5,
+  },
+  compatibilityDevice: {
+    fontSize: 12,
+    marginBottom: 5,
+  },
+  compatibilityWarnings: {
+    marginTop: 5,
+  },
+  compatibilityWarning: {
+    fontSize: 11,
+    marginBottom: 2,
+  },
+  compatibilityChips: {
+    fontSize: 11,
+    fontStyle: 'italic',
+    marginTop: 5,
   },
 });
 
