@@ -86,6 +86,30 @@ Square (2nd generation) terminals work with bidirectional NFC tags manufactured 
 - **Fast Transaction Times**: Optimized for quick NFC interactions
 - **Reliable Performance**: Consistent operation with NXP chipset-based tags
 
+### Ingenico Terminals
+Ingenico payment terminals provide robust NFC compatibility with bidirectional communication capabilities. This integration supports:
+
+- **NTAG21x Family Support**: Full compatibility with NTAG213, NTAG215, and NTAG216 chips
+- **Secure Data Exchange**: Advanced encryption protocols for transaction security
+- **Multi-Application Support**: Seamless integration with various payment and loyalty applications
+- **Global Standards Compliance**: Adherence to international payment processing standards
+
+### Verifone Terminals
+Verifone terminals offer comprehensive NFC functionality with enterprise-grade security features. Key compatibility aspects include:
+
+- **Broad Chipset Support**: Compatible with NXP and other leading NFC chipset manufacturers
+- **High-Performance Processing**: Optimized for rapid transaction processing and data exchange
+- **Advanced Security Modules**: Integrated secure elements for enhanced payment protection
+- **Extensive Protocol Support**: Support for multiple NFC protocols and data formats
+
+### PAX Terminals
+PAX payment terminals deliver reliable NFC performance with focus on user experience and security. The compatibility features encompass:
+
+- **Universal NFC Support**: Broad compatibility across various NFC chip types and standards
+- **Efficient Data Handling**: Streamlined processing for quick and accurate data transmission
+- **Security-First Design**: Built-in security measures to protect sensitive transaction data
+- **Scalable Architecture**: Support for both small-scale and enterprise-level payment solutions
+
 ### Professional Implementation Considerations
 
 This NFC Wallet App solution is fully compatible with Square payment terminals (second generation), as the NXP chipset integration enables seamless bidirectional communication. The existing hardware infrastructure presents a unique opportunity to advance payment technology beyond traditional limitations.
