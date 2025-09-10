@@ -17,6 +17,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NfcManager, {NfcEvents, Ndef} from 'react-native-nfc-manager';
 import AIONETSecurityManager, { SecureTransaction, TransactionChain, BlockchainMessageManager, SecureMessage } from './src/aionetSecurity';
+import { SessionManager, SessionMonitor } from './src/sessionManager';
 
 interface NfcItem {
   id: string;
@@ -951,7 +952,7 @@ const App = () => {
 
               {deviceCompatibility.supportedChips && deviceCompatibility.supportedChips.length > 0 && (
                 <Text style={[styles.compatibilityChips, {color: isDarkMode ? '#aaa' : '#888'}]}>
-                  Supported Chips: {deviceCompatibility.supportedChips.map(chip => chip.type).join(', ')}
+                  Supported Chips: {deviceCompatibility.supportedChips.map((chip: any) => chip.type).join(', ')}
                 </Text>
               )}
             </View>
