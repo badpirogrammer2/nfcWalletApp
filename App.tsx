@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+menimport React, {useEffect, useState} from 'react';
 import {
   SafeAreaView,
   StatusBar,
@@ -18,6 +18,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import NfcManager, {NfcEvents, Ndef} from 'react-native-nfc-manager';
 import AIONETSecurityManager, { SecureTransaction, TransactionChain, BlockchainMessageManager, SecureMessage } from './src/aionetSecurity';
 import { SessionManager, SessionMonitor } from './src/sessionManager';
+import { AdvancedSecurityManager } from './src/advancedSecurity';
 
 interface NfcItem {
   id: string;
@@ -382,6 +383,11 @@ const App = () => {
         const info = aionetManager.getDeviceInfo();
         setDeviceInfo(info);
         console.log('AIONET Security initialized:', info.deviceId);
+
+        // Initialize Advanced Security Features
+        const advancedSecurity = AdvancedSecurityManager.getInstance();
+        await advancedSecurity.initialize();
+        console.log('Advanced Security Features initialized');
 
         // Load paired devices from storage
         await loadPairedDevices();
@@ -980,6 +986,74 @@ const App = () => {
           </View>
         )}
 
+        {/* Advanced Security Features */}
+        <View style={styles.advancedSecuritySection}>
+          <Text style={[styles.advancedSecurityTitle, {color: isDarkMode ? '#fff' : '#000'}]}>
+            🔐 Advanced Security Features
+          </Text>
+          <View style={styles.advancedSecurityButtons}>
+            <TouchableOpacity
+              style={styles.advancedSecurityButton}
+              onPress={async () => {
+                const advancedSecurity = AdvancedSecurityManager.getInstance();
+                const managers = advancedSecurity.getManagers();
+
+                // Demo ZK-SNARKs transaction
+                const zkTransaction = await managers.zk.createZKTransaction(
+                  100, 'user123', 'merchant456', 1000, 'secret123'
+                );
+                console.log('ZK Transaction created:', zkTransaction);
+                NotificationManager.showToast('✅ ZK-SNARKs transaction created');
+              }}>
+              <Text style={styles.advancedSecurityButtonText}>🧮 ZK-SNARKs</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.advancedSecurityButton}
+              onPress={async () => {
+                const advancedSecurity = AdvancedSecurityManager.getInstance();
+                const managers = advancedSecurity.getManagers();
+
+                // Demo multi-signature transaction
+                const multiSigTransaction = await managers.multiSig.createMultiSigTransaction(
+                  250, 'user123', 'merchant456', 2, ['device1', 'device2', 'device3']
+                );
+                console.log('Multi-sig transaction created:', multiSigTransaction);
+                NotificationManager.showToast('✅ Multi-signature transaction created');
+              }}>
+              <Text style={styles.advancedSecurityButtonText}>🔐 Multi-Sig</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.advancedSecurityButton}
+              onPress={async () => {
+                const advancedSecurity = AdvancedSecurityManager.getInstance();
+                const managers = advancedSecurity.getManagers();
+
+                // Demo quantum-resistant encryption
+                const message = 'Quantum-resistant secure message';
+                const encrypted = await managers.quantum.encryptMessage(
+                  message, 'recipient_public_key'
+                );
+                console.log('Quantum encrypted:', encrypted);
+                NotificationManager.showToast('✅ Quantum-resistant encryption demo');
+              }}>
+              <Text style={styles.advancedSecurityButtonText}>⚛️ Quantum</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.advancedSecurityButton}
+              onPress={() => {
+                const advancedSecurity = AdvancedSecurityManager.getInstance();
+                const status = advancedSecurity.getSecurityStatus();
+                console.log('Security status:', status);
+                NotificationManager.showToast(`Monitoring: ${status.monitoringActive ? 'Active' : 'Inactive'}`);
+              }}>
+              <Text style={styles.advancedSecurityButtonText}>👁️ Monitor</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {items.length === 0 ? (
           <View style={styles.emptyState}>
             <Text
@@ -1361,6 +1435,39 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontStyle: 'italic',
     marginTop: 5,
+  },
+  // Advanced Security Styles
+  advancedSecuritySection: {
+    padding: 15,
+    marginBottom: 15,
+    borderRadius: 8,
+    backgroundColor: '#f8f9fa',
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  advancedSecurityTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  advancedSecurityButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+  },
+  advancedSecurityButton: {
+    backgroundColor: '#6f42c1',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 5,
+    marginBottom: 8,
+    minWidth: '48%',
+    alignItems: 'center',
+  },
+  advancedSecurityButtonText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
 });
 
